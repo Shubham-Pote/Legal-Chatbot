@@ -1,0 +1,12 @@
+# FAISS index will be stored here after running ingestion
+# Place your legal PDF documents here
+
+Add PDF files such as:
+- Indian Penal Code (IPC)
+- Code of Criminal Procedure (CrPC)
+- Constitution of India
+- Indian Evidence Act
+- Other legal statutes
+
+Then run: `python backend/ingestion_prisma.py`
+

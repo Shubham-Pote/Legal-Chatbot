@@ -1,0 +1,73 @@
+// Prisma schema for LegalBot
+generator client {
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
+  recursive_type_depth = 5
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
+  passwordHash  String         @map("password_hash")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  title     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int          @map("conversation_id")
+  role           String // 'user' or 'assistant'
+  content        String       @db.Text
+  sources        Json? // Store sources as JSON
+  rating         String? // 'positive', 'negative', or null
+  createdAt      DateTime     @default(now()) @map("created_at")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Document {
+  id        Int        @id @default(autoincrement())
+  filename  String     @unique
+  title     String?
+  fileSize  Int        @map("file_size")
+  pageCount Int        @map("page_count")
+  uploadedAt DateTime  @default(now()) @map("uploaded_at")
+  chunks    DocChunk[]
+
+  @@map("documents")
+}
+
+model DocChunk {
+  id         Int      @id @default(autoincrement())
+  documentId Int      @map("document_id")
+  pageNumber Int      @map("page_number")
+  chunkText  String   @map("chunk_text") @db.Text
+  vectorId   Int?     @map("vector_id") // Reference to FAISS index
+  createdAt  DateTime @default(now()) @map("created_at")
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("doc_chunks")
+}
+
